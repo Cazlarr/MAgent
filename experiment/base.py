@@ -1,5 +1,5 @@
 """
-Double attack, tigers get reward when they attack a same deer
+First iteration of the agent.
 """
 
 import argparse
@@ -13,7 +13,7 @@ from magent.builtin.rule_model import RandomActor
 
 
 def generate_map(env, map_size, handles):
-    env.add_walls(method="random", n=map_size*map_size*0.04)
+    #env.add_walls(method="random", n=map_size*map_size*0.04)
     env.add_agents(handles[0], method="random", n=map_size*map_size*0.05)
     env.add_agents(handles[1], method="random", n=map_size*map_size*0.01)
 
@@ -110,12 +110,11 @@ if __name__ == "__main__":
     parser.add_argument("--train", action="store_true")
     parser.add_argument("--greedy", action="store_true")
     parser.add_argument("--map_size", type=int, default=500)
-    parser.add_argument("--name", type=str, default="tiger")
-    parser.add_argument('--alg', default='dqn', choices=['dqn', 'drqn', 'a2c'])
+    parser.add_argument("--name", type=str, default="base")
     args = parser.parse_args()
 
     # init the game
-    env = magent.GridWorld("double_attack", map_size=args.map_size)
+    env = magent.GridWorld("cultivate", map_size=args.map_size)
     env.set_render_dir("build/render")
 
     # two groups of animal
@@ -129,26 +128,11 @@ if __name__ == "__main__":
     batch_size = 512
     unroll     = 8
 
-    if args.alg == 'dqn':
-        from magent.builtin.tf_model import DeepQNetwork
-        models.append(DeepQNetwork(env, tiger_handle, args.name,
-                                   batch_size=batch_size,
-                                   memory_size=2 ** 20, learning_rate=4e-4))
-        step_batch_size = None
-    elif args.alg == 'drqn':
-        from magent.builtin.tf_model import DeepRecurrentQNetwork
-        models.append(DeepRecurrentQNetwork(env, tiger_handle, "tiger",
-                                   batch_size=batch_size/unroll, unroll_step=unroll,
-                                   memory_size=20000, learning_rate=4e-4))
-        step_batch_size = None
-    elif args.alg == 'a2c':
-        from magent.builtin.mx_model import AdvantageActorCritic
-        step_batch_size = int(10 * args.map_size * args.map_size*0.01)
-        models.append(AdvantageActorCritic(env, tiger_handle, "tiger",
-                                   batch_size=step_batch_size,
-                                   learning_rate=1e-2))
-    else:
-        raise NotImplementedError
+    from magent.builtin.tf_model import DeepQNetwork
+    models.append(DeepQNetwork(env, tiger_handle, args.name,
+                               batch_size=batch_size,
+                               memory_size=2 ** 20, learning_rate=4e-4))
+    step_batch_size = None
 
     # load if
     savedir = 'save_model'
