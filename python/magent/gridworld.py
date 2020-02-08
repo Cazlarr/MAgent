@@ -582,6 +582,7 @@ class EventNode:
     OP_DIE  = 8
     OP_IN_A_LINE = 9
     OP_ALIGN = 10
+    OP_CULTIVATE = 11
 
     # can extend more operation below
 
@@ -611,6 +612,9 @@ class EventNode:
             node.inputs = [subject, x1, y1, x2, y2]
         elif predicate == 'attack':
             node.op = EventNode.OP_ATTACK
+            node.inputs = [subject, args[0]]
+        elif predicate == 'cultivate':
+            node.op = EventNode.OP_CULTIVATE
             node.inputs = [subject, args[0]]
         elif predicate == 'kill':
             node.op = EventNode.OP_KILL

@@ -414,7 +414,7 @@ void GridWorld::set_action(GroupHandle group, const int *actions) {
             Action act = (Action) actions[i];
             agent->set_action(act);
 
-            if (act < type.turn_base) {          // move
+            if (act < type.turn_base) {             // move
                 int x = agent->get_pos().x;
                 int x_ = x % bandwidth;
                 if (x_ < 4 || x_ > bandwidth - 4) {
@@ -423,7 +423,7 @@ void GridWorld::set_action(GroupHandle group, const int *actions) {
                     int to = agent->get_pos().x / bandwidth;
                     move_buffers[to].push_back(MoveAction{agent, act - type.move_base});
                 }
-            } else if (act < type.attack_base) { // turn
+            } else if (act < type.attack_base) {    // turn
                 int x = agent->get_pos().x;
                 int x_ = x % bandwidth;
                 if (x_ < 4 || x_ > bandwidth - 4) {
@@ -432,8 +432,10 @@ void GridWorld::set_action(GroupHandle group, const int *actions) {
                     int to = agent->get_pos().x / bandwidth;
                     turn_buffers[to].push_back(TurnAction{agent, act - type.move_base});
                 }
-            } else {                             // attack
+            } else if (act < type.cultivate_base){  // attack
                 attack_buffer.push_back(AttackAction{agent, act - type.attack_base});
+            } else {                                // cultivate
+                cultivate_buffer.push_back(AttackAction{agent, act - type.attack_base});
             }
         }
     } else {
@@ -442,12 +444,14 @@ void GridWorld::set_action(GroupHandle group, const int *actions) {
             Action act = (Action) actions[i];
             agent->set_action(act);
 
-            if (act < type.turn_base) {          // move
+            if (act < type.turn_base) {                       // move
                 move_buffer_bound.push_back(MoveAction{agent, act - type.move_base});
-            } else if (act < type.attack_base) { // turn
+            } else if (act < type.attack_base) {              // turn
                 turn_buffer_bound.push_back(TurnAction{agent, act - type.move_base});
-            } else {                             // attack
+            } else if (act < type.cultivate_base) {           // attack
                 attack_buffer.push_back(AttackAction{agent, act - type.attack_base});
+            } else {                                          // cultivate
+                cultivate_buffer.push_back(AttackAction{agent, act - type.attack_base});
             }
         }
     }
@@ -459,12 +463,19 @@ void GridWorld::step(int *done) {
 
     LOG(TRACE) << "gridworld step begin.  ";
     size_t attack_size = attack_buffer.size();
+    size_t cultivate_size = cultivate_buffer.size();
     size_t group_size  = groups.size();
 
     // shuffle attacks
     for (int i = 0; i < attack_size; i++) {
         int j = (int)random_engine() % (i+1);
         std::swap(attack_buffer[i], attack_buffer[j]);
+    }
+
+    // shuffle cultivates
+    for (int i = 0; i < cultivate_size; i++) {
+        int j = (int)random_engine() % (i+1);
+        std::swap(cultivate_buffer[i], cultivate_buffer[j]);
     }
 
     LOG(TRACE) << "attack.  ";
@@ -515,6 +526,39 @@ void GridWorld::step(int *done) {
             }
         }
     }
+
+    // cultivate
+    LOG(TRACE) << "cultivate.   ";
+    std::vector<RenderAttackEvent> render_cultivate_buffer;
+
+    #pragma omp parallel for reduction(merge: render_cultivate_buffer)
+    for (int i = 0; i < cultivate_size; i++) {
+        Agent *agent = cultivate_buffer[i].agent;
+
+        if (agent->is_dead())
+            continue;
+
+        int obj_x, obj_y;
+        PositionInteger obj_pos = map.get_attack_obj(cultivate_buffer[i], obj_x, obj_y);
+        if (!first_render)
+            render_cultivate_buffer.emplace_back(RenderAttackEvent{agent->get_id(), obj_x, obj_y});
+
+        if (obj_pos == -1) { // cultivate blank block
+            agent->add_reward(agent->get_type().attack_penalty);
+            continue;
+        }
+
+        float reward = 0.0;
+        GroupHandle dead_group = -1;
+        #pragma omp critical
+        {
+            reward = map.do_attack(agent, obj_pos, dead_group);
+        }
+        agent->add_reward(reward + agent->get_type().attack_penalty);
+    }
+    cultivate_buffer.clear();
+    if (!first_render)
+        render_generator.set_attack_event(render_cultivate_buffer);
 
     // starve
     LOG(TRACE) << "starve.  ";

@@ -112,6 +112,7 @@ private:
 
     // action buffer
     std::vector<AttackAction> attack_buffer;
+    std::vector<AttackAction> cultivate_buffer;
     // split the events to small regions and boundary for parallel
     int NUM_SEP_BUFFER;
     std::vector<MoveAction> *move_buffers, move_buffer_bound;

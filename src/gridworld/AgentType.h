@@ -27,7 +27,7 @@ public:
     float hear_radius, speak_radius;
 
     int speak_ability;
-    float damage, trace, eat_ability, step_recover, kill_supply, food_supply;
+    float damage, cultivate, trace, eat_ability, step_recover, kill_supply, food_supply;
     bool attack_in_group;
 
     Reward step_reward, kill_reward, dead_penalty, attack_penalty;
@@ -44,7 +44,7 @@ public:
     int n_channel; // obstacle, group1, group_hp1, group2, group_hp2
     Range *view_range, *attack_range, *move_range;
 
-    int move_base, turn_base, attack_base;
+    int move_base, turn_base, attack_base, cultivate_base;
     std::vector<int> action_space;
 };
 

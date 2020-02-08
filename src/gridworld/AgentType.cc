@@ -41,7 +41,7 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
     hear_radius = speak_radius = 0.0f;
     speak_ability = 0;
 
-    damage = trace = eat_ability = step_recover = kill_supply = food_supply = 0;
+    damage = cultivate = trace = eat_ability = step_recover = kill_supply = food_supply = 0;
 
     attack_in_group = false; can_absorb = false;
     step_reward = kill_reward  = dead_penalty = attack_penalty = 0.0;
@@ -64,7 +64,7 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
         AGENT_TYPE_SET_INT(speak_ability);
 
         AGENT_TYPE_SET_FLOAT(damage);       AGENT_TYPE_SET_FLOAT(trace);
-        AGENT_TYPE_SET_FLOAT(eat_ability);
+        AGENT_TYPE_SET_FLOAT(cultivate); AGENT_TYPE_SET_FLOAT(eat_ability);
         AGENT_TYPE_SET_FLOAT(step_recover); AGENT_TYPE_SET_FLOAT(kill_supply);
         AGENT_TYPE_SET_FLOAT(food_supply);
 
@@ -115,7 +115,7 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
     } else {
         attack_base = turn_base;
     }
-    int n_action = attack_base + attack_range->get_count();
+    int n_action = attack_base + cultivate_base + attack_range->get_count();
     for (int i = 0; i < n_action; i++) {
         action_space.push_back(i);
     }
