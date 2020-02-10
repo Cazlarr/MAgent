@@ -58,7 +58,8 @@ public:
                       int view_right_bottom_x, int view_right_bottom_y) const;
 
     PositionInteger get_attack_obj(const AttackAction &attack, int &obj_x, int &obj_y) const;
-    Reward do_attack(Agent *agent, PositionInteger pos_int, GroupHandle &dead_group);
+    PositionInteger get_cultivate_obj(const AttackAction &attack, int &obj_x, int &obj_y) const;
+    Reward do_attack(Agent *agent, PositionInteger pos_int, GroupHandle &dead_group, bool cult);
 
     Reward do_move(Agent *agent, const int delta[2]);
     Reward do_turn(Agent *agent, int wise);

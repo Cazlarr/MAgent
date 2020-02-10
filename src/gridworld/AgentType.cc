@@ -37,6 +37,7 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
 
     view_radius = 1; view_angle = 360;
     attack_radius = 0; attack_angle = 0;
+    cultivate_radius = 0; cultivate_angle = 0;
 
     hear_radius = speak_radius = 0.0f;
     speak_ability = 0;
@@ -59,6 +60,7 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
 
         AGENT_TYPE_SET_FLOAT(view_radius);  AGENT_TYPE_SET_FLOAT(view_angle);
         AGENT_TYPE_SET_FLOAT(attack_radius);AGENT_TYPE_SET_FLOAT(attack_angle);
+        AGENT_TYPE_SET_FLOAT(cultivate_radius);AGENT_TYPE_SET_FLOAT(cultivate_angle);
 
         AGENT_TYPE_SET_FLOAT(hear_radius);  AGENT_TYPE_SET_FLOAT(speak_radius);
         AGENT_TYPE_SET_INT(speak_ability);
@@ -102,6 +104,15 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
         attack_range = new SectorRange(attack_angle, attack_radius, parity);
     }
 
+    if (cultivate_angle >= 180) {
+        if (fabs(cultivate_angle - 360) > 1e-5) {
+            LOG(FATAL) << "only supports ranges with angle = 360, when angle > 180.";
+        }
+        cultivate_range = new CircleRange(cultivate_radius, width / 2.0f, parity);
+    } else {
+        cultivate_range = new SectorRange(cultivate_angle, cultivate_radius, parity);
+    }
+
     move_range   = new CircleRange(speed, 0, 1);
     view_x_offset = width / 2; view_y_offset = length / 2;
     att_x_offset  = width / 2; att_y_offset  = length / 2;
@@ -115,7 +126,8 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
     } else {
         attack_base = turn_base;
     }
-    int n_action = attack_base + cultivate_base + attack_range->get_count();
+    int n_action = attack_base + cultivate_base + 
+    attack_range->get_count() + cultivate_range->get_count();
     for (int i = 0; i < n_action; i++) {
         action_space.push_back(i);
     }

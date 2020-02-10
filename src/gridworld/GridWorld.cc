@@ -508,7 +508,7 @@ void GridWorld::step(int *done) {
         GroupHandle dead_group = -1;
         #pragma omp critical
         {
-            reward = map.do_attack(agent, obj_pos, dead_group);
+            reward = map.do_attack(agent, obj_pos, dead_group, false);
             if (dead_group != -1) {
                 groups[dead_group].inc_dead_ct();
             }
@@ -539,7 +539,7 @@ void GridWorld::step(int *done) {
             continue;
 
         int obj_x, obj_y;
-        PositionInteger obj_pos = map.get_attack_obj(cultivate_buffer[i], obj_x, obj_y);
+        PositionInteger obj_pos = map.get_cultivate_obj(cultivate_buffer[i], obj_x, obj_y);
         if (!first_render)
             render_cultivate_buffer.emplace_back(RenderAttackEvent{agent->get_id(), obj_x, obj_y});
 
@@ -552,7 +552,7 @@ void GridWorld::step(int *done) {
         GroupHandle dead_group = -1;
         #pragma omp critical
         {
-            reward = map.do_attack(agent, obj_pos, dead_group);
+            reward = map.do_attack(agent, obj_pos, dead_group, true);
         }
         agent->add_reward(reward + agent->get_type().attack_penalty);
     }

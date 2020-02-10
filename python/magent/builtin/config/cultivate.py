@@ -24,6 +24,7 @@ def get_config(map_size):
         "tiger",
         {'width': 1, 'length': 1, 'hp': 10, 'speed': 1,
          'view_range': gw.CircleRange(4), 'attack_range': gw.CircleRange(1),
+         'cultivate_range': gw.CircleRange(1),
          'damage': 1, 'cultivate': -2, 'step_recover': -0.2,
          })
 
