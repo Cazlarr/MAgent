@@ -126,7 +126,7 @@ AgentType::AgentType(int n, std::string name, const char **keys, float *values, 
     } else {
         attack_base = turn_base;
     }
-    int n_action = attack_base + cultivate_base + 
+    int n_action = attack_base*2 + 
     attack_range->get_count() + cultivate_range->get_count();
     for (int i = 0; i < n_action; i++) {
         action_space.push_back(i);

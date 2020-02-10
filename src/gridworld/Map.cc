@@ -206,7 +206,7 @@ void Map::extract_view(const Agent *agent, float *linear_buffer, const int *chan
     }
 }
 
-PositionInteger Map::get_attack_obj(const AttackAction &attack, int &obj_x, int &obj_y) const {
+PositionInteger Map::get_attack_obj(const AttackAction &attack, int &obj_x, int &obj_y, bool cult) const {
     const Agent *agent = attack.agent;
     const AgentType *type = &attack.agent->get_type();
     Direction dir = agent->get_dir();
@@ -215,52 +215,8 @@ PositionInteger Map::get_attack_obj(const AttackAction &attack, int &obj_x, int 
     int agent_x, agent_y;
     int rela_x, rela_y;
 
-    agent->get_type().attack_range->num2delta(attack.action, rela_x, rela_y);
-
-    save_to_real(agent, agent_x, agent_y);
-    rela_to_abs(agent_x, agent_y, dir, att_x_offset + rela_x, att_y_offset + rela_y, obj_x, obj_y);
-
-    if (!in_board(obj_x, obj_y)) {
-        return -1;
-    }
-
-    PositionInteger pos_int = pos2int(obj_x, obj_y);
-
-    if (slots[pos_int].occupier == nullptr) {
-        return -1;
-    }
-
-    switch (slots[pos_int].occ_type) {
-        case OCC_AGENT:
-        {
-            Agent *obj = (Agent *) slots[pos_int].occupier;
-
-            if (!type->attack_in_group && agent->get_group() == obj->get_group()) { // same type
-                return -1;
-            } else {
-                return pos_int;
-            }
-            break;
-        }
-        case OCC_FOOD:
-            return pos_int;
-        default:
-            LOG(FATAL) << "invalid occ_type in Map::get_attack_obj";
-
-    }
-    return -1;
-}
-
-PositionInteger Map::get_cultivate_obj(const AttackAction &attack, int &obj_x, int &obj_y) const {
-    const Agent *agent = attack.agent;
-    const AgentType *type = &attack.agent->get_type();
-    Direction dir = agent->get_dir();
-
-    int att_x_offset = type->att_x_offset, att_y_offset = type->att_y_offset;
-    int agent_x, agent_y;
-    int rela_x, rela_y;
-
-    agent->get_type().cultivate_range->num2delta(attack.action, rela_x, rela_y);
+    if (cult) agent->get_type().cultivate_range->num2delta(attack.action, rela_x, rela_y);
+    else agent->get_type().attack_range->num2delta(attack.action, rela_x, rela_y);
 
     save_to_real(agent, agent_x, agent_y);
     rela_to_abs(agent_x, agent_y, dir, att_x_offset + rela_x, att_y_offset + rela_y, obj_x, obj_y);
@@ -300,8 +256,9 @@ PositionInteger Map::get_cultivate_obj(const AttackAction &attack, int &obj_x, i
 Reward Map::do_attack(Agent *agent, PositionInteger pos_int, GroupHandle &dead_group, bool cult) {
     // !! all the check should be done at Map::get_attack_obj
 
-    float damage = agent->get_type().damage;
+    float damage;
     if (cult) damage = agent->get_type().cultivate;
+    else damage = agent->get_type().damage;
 
     if (slots[pos_int].occupier == nullptr)  // dead
         return 0.0;
