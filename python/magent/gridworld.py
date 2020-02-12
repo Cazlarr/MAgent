@@ -78,7 +78,11 @@ class GridWorld(Environment):
                     del type_args[key]
                     type_args["attack_radius"] = val.radius
                     type_args["attack_angle"]  = val.angle
-
+                elif key == "cultivate_range":
+                    val = type_args[key]
+                    del type_args[key]
+                    type_args["cultivate_radius"] = val.radius
+                    type_args["cultivate_angle"]  = val.angle
             length = len(type_args)
             keys = (ctypes.c_char_p * length)(*[key.encode("ascii") for key in type_args.keys()])
             values = (ctypes.c_float * length)(*type_args.values())
